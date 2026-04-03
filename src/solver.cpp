@@ -41,7 +41,7 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
         double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
         move_queue_ = pre_moves;
         solved_ = true;
-        return SolveResult(true, std::move(pre_moves), nodes_explored_, elapsed);
+        return SolveResult(true, pre_moves, nodes_explored_, elapsed);
     }
 
     // Run DFS
@@ -61,11 +61,11 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
 
         move_queue_ = std::move(optimized);
         solved_ = true;
-        return SolveResult(true, move_queue_, nodes_explored_, elapsed);
+        return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
     }
 
     string reason = timed_out() ? "timeout" : "exhausted search space";
-    return SolveResult(false, {}, nodes_explored_, elapsed, reason);
+    return SolveResult(false, nodes_explored_, elapsed, reason);
 }
 
 vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,

@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <optional>
+#include <utility>
 
 // ============================================================================
 // Enums
@@ -88,6 +88,7 @@ struct Pile {
     int y = 0;
 
     explicit Pile(PileType t) : pile_type(t) {}
+    Pile(const Pile& other) = default;
 
     bool is_empty() const { return cards.empty(); }
     const Card* top_card() const;
@@ -134,13 +135,13 @@ struct GameState {
     Pile waste;
     std::vector<Pile> foundations;  // 4 piles
     std::vector<Pile> tableau;       // 7 piles
-    int draw_count = 1;             // 1 or 3
+    int draw_count = 1;              // 1 or 3
 
     GameState();
-    GameState(const GameState& other) = delete;
-    GameState& operator=(const GameState&) = delete;
-    GameState(GameState&& other) noexcept;
-    GameState& operator=(GameState&&) noexcept;
+    GameState(const GameState& other) = default;
+    GameState(GameState&& other) noexcept = default;
+    GameState& operator=(const GameState&) = default;
+    GameState& operator=(GameState&&) noexcept = default;
 
     GameState clone() const;
     int64_t state_hash() const;

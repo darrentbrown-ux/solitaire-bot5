@@ -4,6 +4,7 @@
 
 #include "game_state.hpp"
 #include <windows.h>
+#include <utility>
 
 // ============================================================================
 // InputController
@@ -32,11 +33,11 @@ private:
     void click_at(int cx, int cy);
     void double_click_at(int cx, int cy);
     void drag(int from_cx, int from_cy, int to_cx, int to_cy);
-    pair<int,int> client_to_screen(int cx, int cy);
+    std::pair<int,int> client_to_screen(int cx, int cy);
 
-    pair<int,int> card_click_pos(const Pile& pile, int card_index = -1) const;
-    pair<int,int> pile_base_pos(const Pile& pile) const;
-    pair<int,int> dest_drop_pos(const Pile& pile) const;
+    std::pair<int,int> card_click_pos(const Pile& pile, int card_index = -1) const;
+    std::pair<int,int> pile_base_pos(const Pile& pile) const;
+    std::pair<int,int> dest_drop_pos(const Pile& pile) const;
 
     void do_draw_stock(const GameState& state);
     void do_recycle_stock(const GameState& state);

@@ -22,6 +22,8 @@ struct SolveResult {
     SolveResult() : solved(false), nodes_explored(0), elapsed(0.0) {}
     SolveResult(bool ok, std::vector<Move>&& m, int nodes, double time_s)
         : solved(ok), moves(std::move(m)), nodes_explored(nodes), elapsed(time_s) {}
+    SolveResult(bool ok, int nodes, double time_s, const std::string& r)
+        : solved(ok), moves(), nodes_explored(nodes), elapsed(time_s), reason(r) {}
 };
 
 // ============================================================================

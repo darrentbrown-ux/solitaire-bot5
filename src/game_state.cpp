@@ -41,9 +41,9 @@ string Card::to_string() const {
 }
 
 Card Card::from_memory(uint16_t word, int X, int Y) {
-    int card_id = word & 0x3F;
-    bool face_down = !(word & 0x8000);
-    return Card(card_id, face_down, X, Y);
+    int id = word & 0x3F;
+    bool down = !(word & 0x8000);
+    return Card(id, down, X, Y);
 }
 
 // ============================================================================
@@ -116,13 +116,15 @@ string Move::to_string() const {
         case MoveType::WASTE_TO_FOUNDATION:
             return "Waste -> Foundation: " + card_str;
         case MoveType::WASTE_TO_TABLEAU:
-            return "Waste -> Tableau " + to_string(static_cast<int>(dest) - 7) + ": " + card_str;
+            return "Waste -> Tableau " + std::to_string(static_cast<int>(dest) - static_cast<int>(PileType::TABLEAU_0))
+                   + ": " + card_str;
         case MoveType::TABLEAU_TO_FOUNDATION:
-            return "Tableau " + to_string(static_cast<int>(source) - 7) + " -> Foundation: " + card_str;
+            return "Tableau " + std::to_string(static_cast<int>(source) - static_cast<int>(PileType::TABLEAU_0))
+                   + " -> Foundation: " + card_str;
         case MoveType::TABLEAU_TO_TABLEAU:
-            return "Tableau " + to_string(static_cast<int>(source) - 7) + " -> Tableau " +
-                   to_string(static_cast<int>(dest) - 7) + ": " + card_str +
-                   " (" + to_string(num_cards) + " cards)";
+            return "Tableau " + std::to_string(static_cast<int>(source) - static_cast<int>(PileType::TABLEAU_0))
+                   + " -> Tableau " + std::to_string(static_cast<int>(dest) - static_cast<int>(PileType::TABLEAU_0))
+                   + ": " + card_str + " (" + std::to_string(num_cards) + " cards)";
         case MoveType::RECYCLE_WASTE:
             return "Recycle waste -> stock";
         default:
@@ -140,27 +142,10 @@ GameState::GameState()
 {
     foundations.reserve(4);
     for (int i = 0; i < 4; i++)
-        foundations.emplace_back(PileType::FOUNDATION_0 + i);
+        foundations.emplace_back(static_cast<PileType>(static_cast<int>(PileType::FOUNDATION_0) + i));
     tableau.reserve(7);
     for (int i = 0; i < 7; i++)
-        tableau.emplace_back(PileType::TABLEAU_0 + i);
-}
-
-GameState::GameState(GameState&& other) noexcept
-    : stock(std::move(other.stock))
-    , waste(std::move(other.waste))
-    , foundations(std::move(other.foundations))
-    , tableau(std::move(other.tableau))
-    , draw_count(other.draw_count)
-{}
-
-GameState& GameState::operator=(GameState&& other) noexcept {
-    stock = std::move(other.stock);
-    waste = std::move(other.waste);
-    foundations = std::move(other.foundations);
-    tableau = std::move(other.tableau);
-    draw_count = other.draw_count;
-    return *this;
+        tableau.emplace_back(static_cast<PileType>(static_cast<int>(PileType::TABLEAU_0) + i));
 }
 
 GameState GameState::clone() const {
@@ -249,7 +234,6 @@ const Pile* GameState::_pile_by_type(PileType pt) const {
 }
 
 const Pile* GameState::foundation_for_suit(Suit s) const {
-    int suit_val = static_cast<int>(s);
     for (const auto& f : foundations) {
         if (!f.cards.empty() && f.cards[0].suit() == s) return &f;
     }
@@ -263,7 +247,8 @@ const Pile* GameState::foundation_accepts(const Card& card) const {
             if (card.rank() == Rank::ACE) return &f;
         } else {
             const Card* top = f.top_card();
-            if (top && top->suit() == card.suit() && top->rank() == Rank(static_cast<int>(card.rank()) - 1))
+            if (top && top->suit() == card.suit()
+                && top->rank() == Rank(static_cast<int>(card.rank()) - 1))
                 return &f;
         }
     }
@@ -286,7 +271,6 @@ vector<const Pile*> GameState::tableau_accepts(const Card& card) const {
 }
 
 GameState& GameState::apply_move(const Move& move) {
-    // Auto-flip is handled by the caller when simulating
     switch (move.move_type) {
         case MoveType::DRAW_STOCK: {
             int n = min(draw_count, (int)stock.cards.size());
@@ -382,8 +366,7 @@ string GameState::display() const {
         for (const auto& t : tableau) {
             if (row < (int)t.cards.size()) {
                 const Card& c = t.cards[row];
-                string s = c.to_string();
-                ss << setw(5) << s;
+                ss << setw(5) << c.to_string();
             } else {
                 ss << "     ";
             }

@@ -439,6 +439,7 @@ struct Bot {
 
 private:
     static string to_string(int v) { ostringstream s; s << v; return s.str(); }
+    static string to_string(unsigned long v) { ostringstream s; s << v; return s.str(); }
     static string to_string(double v) { ostringstream s; s << v; return s.str(); }
     static string to_string(int64_t v) { ostringstream s; s << v; return s.str(); }
     static string to_string_fixed(double v, int decimals) {
