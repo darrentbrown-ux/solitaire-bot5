@@ -115,8 +115,9 @@ std::pair<int,int> InputController::dest_drop_pos(const Pile& pile) const {
 }
 
 void InputController::execute_move(const Move& move, const GameState& state) {
-    if (move.move_type == MoveType::NONE) return;
     switch (move.move_type) {
+        case MoveType::NONE:
+            return;
         case MoveType::DRAW_STOCK:
             do_draw_stock(state); break;
         case MoveType::RECYCLE_WASTE:

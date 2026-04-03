@@ -73,7 +73,7 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
         if (result.size() == 1 && result[0].is_no_move()) {
             move_queue_ = std::move(pre_moves);
             solved_flag_ = true;
-            return SolveResult(true, move_queue_, nodes_explored_, elapsed);
+            return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
         }
         vector<Move> all_moves = pre_moves;
         all_moves.insert(all_moves.end(), result.begin(), result.end());
