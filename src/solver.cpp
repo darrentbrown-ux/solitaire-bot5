@@ -146,6 +146,15 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
             if (new_passes > max_stock_passes_) continue;
         }
 
+        // Check if forced moves won the game — don't recurse if so
+        if (new_state.is_won()) {
+            if (won_reached) (*won_reached)++;
+            vector<Move> win_path;
+            win_path.push_back(move);
+            win_path.insert(win_path.end(), forced.begin(), forced.end());
+            return win_path;
+        }
+
         // Update recent tableau moves
         vector<Move> new_recent;
         if (!forced.empty()) {
