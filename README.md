@@ -67,10 +67,10 @@ solitaire-bot5.exe --no-fast
 |---|---|---|
 | `--exe PATH` | Path to sol.exe | `C:\Games\SOL_ENGLISH\sol.exe` |
 | `--speed SECS` | Delay between moves | `0.2` |
-| `--solve-timeout SECS` | Max time solving each game | `5` |
+| `--solve-timeout SECS` | Max time solving each game | `30` |
 | `--max-stock-passes N` | Max stock passes the solver considers | `10` |
 | `--max-attempts N` | Max games (0 = unlimited) | `0` |
-| `--fast` | Fast mode (minimal delays) | **ON** |
+| `--fast` | Fast mode (minimal delays, --no-fast to disable) | **ON** |
 | `--no-fast` | Disable fast mode | Off |
 | `--verbose`, `-v` | Show detailed output, hidden cards, move log | Off |
 | `--no-launch` | Don't auto-launch sol.exe | Off |

@@ -17,7 +17,7 @@ using namespace std;
 
 static const char* DEFAULT_EXE_PATH     = R"(C:\Games\SOL_ENGLISH\sol.exe)";
 static const double DEFAULT_MOVE_DELAY  = 0.2;
-static const double DEFAULT_SOLVE_TIMEOUT = 5.0;   // <-- bot5 default: 5 seconds
+static const double DEFAULT_SOLVE_TIMEOUT = 30.0;  // was 5s — hard boards need more time
 static const int   DEFAULT_MAX_STOCK_PASSES = 10;
 static const double FAST_MOVE_DELAY      = 0.02;
 static const double READ_RETRY_DELAY     = 0.5;
@@ -182,6 +182,7 @@ struct Bot {
         log("Solve timeout: " + to_string(cfg.solve_timeout) + "s | "
             "Fast: " + string(cfg.fast ? "yes" : "no") + " | "
             "Max attempts: " + (cfg.max_attempts ? to_string(cfg.max_attempts) : "unlimited"));
+        log("Defaults: --solve-timeout 30 --fast  (override with --solve-timeout N --no-fast)\n");
         log("Press Escape to stop.\n");
 
         signal(SIGINT, on_escape);
