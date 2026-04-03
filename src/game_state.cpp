@@ -285,6 +285,8 @@ vector<const Pile*> GameState::tableau_accepts(const Card& card) const {
 
 GameState& GameState::apply_move(const Move& move) {
     switch (move.move_type) {
+        case MoveType::NONE:
+            break;
         case MoveType::DRAW_STOCK: {
             int n = min(draw_count, (int)stock.cards.size());
             for (int i = 0; i < n; i++) {

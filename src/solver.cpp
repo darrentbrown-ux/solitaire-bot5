@@ -66,11 +66,14 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
     }
 
     if (!result.empty()) {
-        // Sentinel = already won state reached (pre_moves took us the whole way)
+        // Sentinel = won during DFS; pre_moves were applied to the clone.
+        // Add pre_moves to move_queue_ so execute_solution can verify the
+        // actual game state matches (the game's built-in auto-move will handle
+        // them, so they'll either succeed or be no-ops).
         if (result.size() == 1 && result[0].is_no_move()) {
             move_queue_ = std::move(pre_moves);
             solved_flag_ = true;
-            return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
+            return SolveResult(true, move_queue_, nodes_explored_, elapsed);
         }
         vector<Move> all_moves = pre_moves;
         all_moves.insert(all_moves.end(), result.begin(), result.end());
