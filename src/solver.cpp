@@ -66,6 +66,12 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
     }
 
     if (!result.empty()) {
+        // Sentinel = already won state reached (pre_moves took us the whole way)
+        if (result.size() == 1 && result[0].is_no_move()) {
+            move_queue_ = std::move(pre_moves);
+            solved_flag_ = true;
+            return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
+        }
         vector<Move> all_moves = pre_moves;
         all_moves.insert(all_moves.end(), result.begin(), result.end());
         vector<Move> optimized = remove_cycles(initial_state, std::move(all_moves));
@@ -98,7 +104,8 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
 
     if (state.is_won()) {
         if (won_reached) (*won_reached)++;
-        return {};
+        // Return sentinel so the call chain knows we won (empty vec = "no path found")
+        return {Move(MoveType::NONE, PileType::STOCK, PileType::STOCK)};
     }
 
     // Transposition check
@@ -148,6 +155,8 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
 
         vector<Move> result = dfs(new_state, depth + 1, new_passes, &new_recent, tt_skipped, won_reached);
         if (!result.empty()) {
+            // If result is the sentinel, propagate it up unchanged
+            if (result.size() == 1 && result[0].is_no_move()) return result;
             vector<Move> full;
             full.push_back(move);
             full.insert(full.end(), forced.begin(), forced.end());

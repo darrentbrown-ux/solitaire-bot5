@@ -122,6 +122,8 @@ string Move::to_string() const {
     ostringstream ss;
     string card_str = card_id_to_str(card_id);
     switch (move_type) {
+        case MoveType::NONE:
+            return "[already won]";
         case MoveType::DRAW_STOCK:
             return "Draw from stock";
         case MoveType::WASTE_TO_FOUNDATION:

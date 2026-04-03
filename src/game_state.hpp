@@ -41,12 +41,13 @@ enum class PileType : int {
 };
 
 enum class MoveType : int {
-    DRAW_STOCK = 0,
-    WASTE_TO_FOUNDATION = 1,
-    WASTE_TO_TABLEAU = 2,
-    TABLEAU_TO_FOUNDATION = 3,
-    TABLEAU_TO_TABLEAU = 4,
-    RECYCLE_WASTE = 5
+    NONE = 0,           // sentinel: no move (used for "already won" signal)
+    DRAW_STOCK = 1,
+    WASTE_TO_FOUNDATION = 2,
+    WASTE_TO_TABLEAU = 3,
+    TABLEAU_TO_FOUNDATION = 4,
+    TABLEAU_TO_TABLEAU = 5,
+    RECYCLE_WASTE = 6
 };
 
 // ============================================================================
@@ -120,6 +121,8 @@ struct Move {
     Move(MoveType mt, PileType src, PileType dst,
          int cid = -1, int n = 1, int p = 0)
         : move_type(mt), source(src), dest(dst), card_id(cid), num_cards(n), priority(p) {}
+
+    bool is_no_move() const { return move_type == MoveType::NONE; }
 
     std::string to_string() const;
 
