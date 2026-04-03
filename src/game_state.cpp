@@ -107,9 +107,20 @@ string Pile::to_string() const {
 // Move
 // ============================================================================
 
+static string card_id_to_str(int card_id) {
+    if (card_id < 0) return "?";
+    static const char* DISP = "A23456789TJQK";
+    static const char* SUIT = "\x03\x04\x05\x06";
+    int r = card_id / 4, s = card_id % 4;
+    string out;
+    out += DISP[r];
+    out += SUIT[s];
+    return out;
+}
+
 string Move::to_string() const {
     ostringstream ss;
-    string card_str = card ? card->to_string() : "?";
+    string card_str = card_id_to_str(card_id);
     switch (move_type) {
         case MoveType::DRAW_STOCK:
             return "Draw from stock";

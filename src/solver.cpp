@@ -160,7 +160,7 @@ vector<Move> PerfectSolver::apply_forced_moves(GameState& state) {
             if (is_auto_foundation_card(*card, state)) {
                 const Pile* dest = state.foundation_accepts(*card);
                 if (dest) {
-                    Move m(MoveType::WASTE_TO_FOUNDATION, PileType::WASTE, dest->pile_type, card);
+                    Move m(MoveType::WASTE_TO_FOUNDATION, PileType::WASTE, dest->pile_type, card->card_id);
                     state.apply_move(m);
                     forced.push_back(m);
                     changed = true;
@@ -176,7 +176,7 @@ vector<Move> PerfectSolver::apply_forced_moves(GameState& state) {
             if (card && !card->face_down && is_auto_foundation_card(*card, state)) {
                 const Pile* dest = state.foundation_accepts(*card);
                 if (dest) {
-                    Move m(MoveType::TABLEAU_TO_FOUNDATION, t.pile_type, dest->pile_type, card);
+                    Move m(MoveType::TABLEAU_TO_FOUNDATION, t.pile_type, dest->pile_type, card->card_id);
                     state.apply_move(m);
                     forced.push_back(m);
                     changed = true;
@@ -222,7 +222,7 @@ vector<Move> PerfectSolver::generate_ordered_moves(const GameState& state, int s
                 bool exposes = (int)t.cards.size() > 1 && t.cards[t.cards.size() - 2].face_down;
                 int priority = exposes ? 900 : 800;
                 moves.emplace_back(priority, Move(MoveType::TABLEAU_TO_FOUNDATION,
-                                                  t.pile_type, dest->pile_type, card));
+                                                  t.pile_type, dest->pile_type, card->card_id));
             }
         }
     }
@@ -232,7 +232,7 @@ vector<Move> PerfectSolver::generate_ordered_moves(const GameState& state, int s
         const Card* card = state.waste.top_card();
         if (const Pile* dest = state.foundation_accepts(*card)) {
             moves.emplace_back(750, Move(MoveType::WASTE_TO_FOUNDATION,
-                                          PileType::WASTE, dest->pile_type, card));
+                                          PileType::WASTE, dest->pile_type, card->card_id));
         }
     }
 
@@ -255,7 +255,7 @@ vector<Move> PerfectSolver::generate_ordered_moves(const GameState& state, int s
             }
             if (can_place) {
                 moves.emplace_back(300, Move(MoveType::WASTE_TO_TABLEAU,
-                                               PileType::WASTE, dst.pile_type, card));
+                                               PileType::WASTE, dst.pile_type, card->card_id));
             }
         }
     }
@@ -348,7 +348,7 @@ vector<pair<int, Move>> PerfectSolver::tableau_to_tableau_moves(const GameState&
                 }
 
                 moves.emplace_back(priority, Move(MoveType::TABLEAU_TO_TABLEAU,
-                                                  src.pile_type, dst.pile_type, &card, num_cards));
+                                                  src.pile_type, dst.pile_type, card.card_id, num_cards));
             }
         }
     }

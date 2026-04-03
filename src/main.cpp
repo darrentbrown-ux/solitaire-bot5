@@ -104,6 +104,27 @@ static string card_full_name(const Card* c) {
     return string(RN[static_cast<int>(r)]) + " of " + SN[static_cast<int>(s)];
 }
 
+static string card_id_full_name(int card_id) {
+    if (card_id < 0) return "nothing";
+    static const char* RN[] = {"ace","two","three","four","five","six","seven","eight",
+                               "nine","ten","jack","queen","king"};
+    static const char* SN[] = {"clubs","diamonds","hearts","spades"};
+    int r = card_id / 4, s = card_id % 4;
+    return string(RN[r]) + " of " + SN[s];
+}
+
+static const Card* lookup_move_card(const Move& move, const GameState& state) {
+    if (move.card_id < 0) return nullptr;
+    if (move.source == PileType::WASTE && !state.waste.is_empty())
+        return state.waste.top_card();
+    if (move.source >= PileType::TABLEAU_0 && move.source <= PileType::TABLEAU_6) {
+        int idx = static_cast<int>(move.source) - static_cast<int>(PileType::TABLEAU_0);
+        if (!state.tableau[idx].is_empty())
+            return state.tableau[idx].top_card();
+    }
+    return nullptr;
+}
+
 static string pile_summary(const Pile& pile) {
     if (pile.is_empty()) return "empty";
     vector<string> parts;
@@ -118,7 +139,7 @@ static string pile_summary(const Pile& pile) {
 }
 
 static string describe_move_attempt(const Move& move, const GameState& state) {
-    const Card* card = move.card;
+    const Card* card = lookup_move_card(move, state);
     if (!card) return move.to_string();
 
     if (move.move_type == MoveType::WASTE_TO_TABLEAU) {

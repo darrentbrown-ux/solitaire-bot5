@@ -112,18 +112,17 @@ struct Move {
     MoveType move_type;
     PileType source;
     PileType dest;
-    const Card* card = nullptr;
+    int card_id = -1;   // -1 = none/unknown
     int num_cards = 1;
     int priority = 0;
 
     Move() {}
     Move(MoveType mt, PileType src, PileType dst,
-         const Card* c = nullptr, int n = 1, int p = 0)
-        : move_type(mt), source(src), dest(dst), card(c), num_cards(n), priority(p) {}
+         int cid = -1, int n = 1, int p = 0)
+        : move_type(mt), source(src), dest(dst), card_id(cid), num_cards(n), priority(p) {}
 
     std::string to_string() const;
-    std::string forward_key() const;
-    std::string reverse_key() const;
+
 };
 
 // ============================================================================
