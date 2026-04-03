@@ -31,53 +31,50 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
     visited_.clear();
     move_queue_.clear();
     current_index_ = 0;
-    solved_ = false;
+    solved_flag_ = false;
 
     // Apply forced moves (Aces, safe Twos)
     GameState state = initial_state.clone();
     vector<Move> pre_moves = apply_forced_moves(state);
 
     if (verbose_) {
-        cerr << "  [dbg] forced pre-moves: " << pre_moves.size()
-             << "  foundation_count=" << foundation_count(state) << "
-"
-             << "  is_won=" << state.is_won() << "
-"
-             << "  initial state:
-" << state.display();
+        cerr << "  [dbg] forced pre-moves: " << pre_moves.size() << "\n";
+        cerr << "  [dbg] foundation_count=" << foundation_count(state)
+             << "  is_won=" << state.is_won() << "\n";
+        if (pre_moves.empty()) {
+            cerr << "  [dbg] initial state:\n" << state.display();
+        }
     }
 
     if (state.is_won()) {
         double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
         move_queue_ = std::move(pre_moves);
-        solved_ = true;
+        solved_flag_ = true;
         return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
     }
 
     // Run DFS
-    int tt_skipped = 0, won_reached = 0;
+    int tt_skipped = 0;
+    int won_reached = 0;
     vector<Move> result = dfs(state, 0, 0, nullptr, &tt_skipped, &won_reached);
     double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
 
     if (verbose_) {
         cerr << "  [dbg] DFS done: nodes=" << nodes_explored_
              << "  tt_skipped=" << tt_skipped
-             << "  won_reached=" << won_reached << "
-";
+             << "  won_reached=" << won_reached << "\n";
+    }
 
     if (!result.empty()) {
         vector<Move> all_moves = pre_moves;
         all_moves.insert(all_moves.end(), result.begin(), result.end());
-
-        // Remove cycles
         vector<Move> optimized = remove_cycles(initial_state, std::move(all_moves));
         if (verbose_ && (int)optimized.size() < (int)all_moves.size()) {
             cerr << "  > Optimizer: removed " << (int)all_moves.size() - (int)optimized.size()
-                 << " redundant moves (" << (int)all_moves.size() << " -> " << (int)optimized.size() << ")\n";
+                 << " redundant moves\n";
         }
-
         move_queue_ = std::move(optimized);
-        solved_ = true;
+        solved_flag_ = true;
         return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
     }
 
@@ -87,12 +84,11 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
 
 vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
                                   const vector<Move>* recent_tab_moves,
-                                  int* tt_skipped, int* won_reached) {
+                                  int* tt_skipped, int* won_reached) const {
     nodes_explored_++;
 
     if (nodes_explored_ % 500000 == 0 && verbose_) {
-        cerr << "  [dbg] nodes=" << nodes_explored_ << " depth=" << depth << "
-";
+        cerr << "  [dbg] nodes=" << nodes_explored_ << " depth=" << depth << "\n";
     }
 
     if (nodes_explored_ % 2000 == 0 && timed_out())
@@ -141,7 +137,6 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
         // Update recent tableau moves
         vector<Move> new_recent;
         if (!forced.empty()) {
-            // Foundation progress happened — clear history
             new_recent.clear();
         } else if (move.move_type == MoveType::TABLEAU_TO_TABLEAU) {
             new_recent = recent_tab_moves ? *recent_tab_moves : vector<Move>();
@@ -176,7 +171,7 @@ bool PerfectSolver::is_reverse_of_recent(const Move& move, const vector<Move>& r
     return false;
 }
 
-vector<Move> PerfectSolver::apply_forced_moves(GameState& state) {
+vector<Move> PerfectSolver::apply_forced_moves(GameState& state) const {
     vector<Move> forced;
     bool changed = true;
 
@@ -220,9 +215,8 @@ vector<Move> PerfectSolver::apply_forced_moves(GameState& state) {
 bool PerfectSolver::is_auto_foundation_card(const Card& card, const GameState& state) const {
     if (!state.foundation_accepts(card)) return false;
     int rank_val = static_cast<int>(card.rank());
-    if (rank_val <= 1) return true;  // Ace or Two
+    if (rank_val <= 1) return true;
 
-    string opp_color = card.is_red() ? "black" : "red";
     int min_opp = 99;
     int opp_count = 0;
     for (const auto& f : state.foundations) {
@@ -239,7 +233,7 @@ bool PerfectSolver::is_auto_foundation_card(const Card& card, const GameState& s
     return min_opp >= rank_val - 1;
 }
 
-vector<Move> PerfectSolver::generate_ordered_moves(const GameState& state, int stock_passes) {
+vector<Move> PerfectSolver::generate_ordered_moves(const GameState& state, int stock_passes) const {
     vector<pair<int, Move>> moves;
 
     // Tableau -> Foundation
@@ -309,7 +303,7 @@ vector<Move> PerfectSolver::generate_ordered_moves(const GameState& state, int s
     return result;
 }
 
-vector<pair<int, Move>> PerfectSolver::tableau_to_tableau_moves(const GameState& state) {
+vector<pair<int, Move>> PerfectSolver::tableau_to_tableau_moves(const GameState& state) const {
     vector<pair<int, Move>> moves;
 
     for (const auto& src : state.tableau) {
@@ -353,7 +347,6 @@ vector<pair<int, Move>> PerfectSolver::tableau_to_tableau_moves(const GameState&
                 } else if (empties) {
                     priority = 600;
                 } else {
-                    // Non-exposing, non-emptying — only allow if it enables foundation or waste play
                     bool enables_foundation = false;
                     if (start_idx > 0) {
                         const Card& below = src.cards[start_idx - 1];
@@ -373,7 +366,7 @@ vector<pair<int, Move>> PerfectSolver::tableau_to_tableau_moves(const GameState&
 
                     if (enables_foundation) priority = 650;
                     else if (creates_waste_play) priority = 500;
-                    else continue;  // Skip pointless shuffle
+                    else continue;
                 }
 
                 moves.emplace_back(priority, Move(MoveType::TABLEAU_TO_TABLEAU,
@@ -410,10 +403,8 @@ vector<Move> PerfectSolver::remove_cycles(const GameState& initial, vector<Move>
             if (seen.count(h)) {
                 int cycle_start = seen[h];
                 result = vector<Move>(result.begin(), result.begin() + cycle_start);
-                // Rebuild state
                 state = initial.clone();
                 for (const Move& m : result) state.apply_move(m);
-                // Rebuild seen
                 seen.clear();
                 seen[initial.state_hash()] = 0;
                 GameState tmp = initial.clone();

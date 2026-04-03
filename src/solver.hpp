@@ -45,24 +45,25 @@ private:
     int max_stock_passes_;
     bool verbose_;
 
-    std::vector<Move> move_queue_;
+    mutable std::vector<Move> move_queue_;
     int current_index_ = 0;
     bool solved_ = false;
 
     // Internal DFS state
-    int nodes_explored_ = 0;
-    double start_time_ = 0.0;
-    std::unordered_map<int64_t, int> visited_;  // state_hash -> best foundation count
+    mutable int nodes_explored_ = 0;
+    mutable double start_time_ = 0.0;
+    mutable std::unordered_map<int64_t, int> visited_;
+    mutable bool solved_flag_ = false;
 
     bool timed_out() const;
     int foundation_count(const GameState& state) const;
     std::vector<Move> dfs(GameState state, int depth, int stock_passes,
                           const std::vector<Move>* recent_tab_moves,
-                          int* tt_skipped = nullptr, int* won_reached = nullptr);
+                          int* tt_skipped = nullptr, int* won_reached = nullptr) const;
 
-    std::vector<Move> generate_ordered_moves(const GameState& state, int stock_passes);
-    std::vector<std::pair<int, Move>> tableau_to_tableau_moves(const GameState& state);
-    std::vector<Move> apply_forced_moves(GameState& state);
+    std::vector<Move> generate_ordered_moves(const GameState& state, int stock_passes) const;
+    std::vector<std::pair<int, Move>> tableau_to_tableau_moves(const GameState& state) const;
+    std::vector<Move> apply_forced_moves(GameState& state) const;
     bool is_auto_foundation_card(const Card& card, const GameState& state) const;
     bool is_reverse_of_recent(const Move& move, const std::vector<Move>& recent_tab) const;
     bool is_valid_sequence(const std::vector<Card>& cards) const;
