@@ -49,8 +49,7 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
     if (state.is_won()) {
         double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
         if (verbose_) {
-            cerr << "  [dbg] TOP-LEVEL is_won()=true with pre_moves.size()=" << pre_moves.size() << "
-";
+            cerr << "  [dbg] TOP-LEVEL is_won()=true with pre_moves.size()=" << pre_moves.size() << "\n";
         }
         move_queue_ = std::move(pre_moves);
         solved_flag_ = true;
@@ -110,12 +109,10 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
         if (won_reached) (*won_reached)++;
         if (verbose_) {
             cerr << "  [dbg] is_won()=true at depth=" << depth
-                 << "  foundation_count=" << foundation_count(state) << "
-";
+                 << "  foundation_count=" << foundation_count(state) << "\n";
             // Log how many moves are generated for this state
             vector<Move> dbg_moves = generate_ordered_moves(state, stock_passes);
-            cerr << "  [dbg]   moves available at won-state: " << dbg_moves.size() << "
-";
+            cerr << "  [dbg]   moves available at won-state: " << dbg_moves.size() << "\n";
         }
         // Return sentinel so the call chain knows we won (empty vec = "no path found")
         return {Move(MoveType::NONE, PileType::STOCK, PileType::STOCK)};
