@@ -41,7 +41,7 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
         double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
         move_queue_ = pre_moves;
         solved_ = true;
-        return SolveResult(true, pre_moves, nodes_explored_, elapsed);
+        return SolveResult(true, std::move(pre_moves), nodes_explored_, elapsed);
     }
 
     // Run DFS
