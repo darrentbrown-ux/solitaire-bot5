@@ -311,20 +311,10 @@ struct Bot {
         GameState state = read_state();
         int64_t old_hash = hash_state(state);
 
-        while (g_running) {
-            const Move* move = solver->get_next_move();
-            if (!move) {
-                state = read_state();
-                if (state.is_won()) {
-                    games_won++;
-                    log(":D Game WON! (" + to_string(move_count) + " moves executed)");
-                    return "won";
-                } else {
-                    log("! Solution executed but game not won (" +
-                        to_string(move_count) + " moves). Possible execution error.");
-                    return "failed";
-                }
-            }
+        for (size_t i = 0; i < moves.size() && g_running; ) {
+            const Move& move = moves[i];
+            // Skip sentinel (already-won marker)
+            if (move.is_no_move()) { ++i; continue; }
 
             state = read_state();
             if (state.is_won()) {
@@ -333,11 +323,10 @@ struct Bot {
                 return "won";
             }
 
-            int remaining = solver->moves_remaining();
-            vlog("[" + to_string(move_count + 1) + "/" + to_string(move_count + 1 + remaining) +
-                 "] " + move->to_string());
+            vlog("[" + to_string(move_count + 1) + "/" + to_string((int)moves.size()) +
+                 "] " + move.to_string());
 
-            string error_detail = describe_move_attempt(*move, state);
+            string error_detail = describe_move_attempt(move, state);
 
             // Flip exposed face-down cards before the move
             flip_exposed_cards(state);
@@ -347,7 +336,7 @@ struct Bot {
 
             bool success = false;
             for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
-                controller->execute_move(*move, state);
+                controller->execute_move(move, state);
                 double post_delay = cfg.fast ? FAST_POST_MOVE_READ_DELAY : POST_MOVE_READ_DELAY;
                 Sleep((DWORD)(post_delay * 1000));
 
@@ -378,10 +367,22 @@ struct Bot {
 
             move_count++;
             total_moves++;
+            ++i;
             flip_exposed_cards(state);
             Sleep((DWORD)(cfg.fast ? 30 : 100));
         }
-        return "failed";
+
+        // All moves executed — check final state
+        state = read_state();
+        if (state.is_won()) {
+            games_won++;
+            log(":D Game WON! (" + to_string(move_count) + " moves executed)");
+            return "won";
+        } else {
+            log("! Solution executed but game not won (" +
+                to_string(move_count) + " moves). Possible execution error.");
+            return "failed";
+        }
     }
 
     void flip_exposed_cards(GameState& state) {
