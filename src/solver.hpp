@@ -13,17 +13,18 @@
 // ============================================================================
 
 struct SolveResult {
-    bool solved;
+    bool solved = false;        // true = a winning path was found
+    bool won = false;           // true = initial state was already won (0-move win)
     std::vector<Move> moves;
     int nodes_explored = 0;
     double elapsed = 0.0;
     std::string reason;
 
-    SolveResult() : solved(false), nodes_explored(0), elapsed(0.0) {}
-    SolveResult(bool ok, std::vector<Move>&& m, int nodes, double time_s)
-        : solved(ok), moves(std::move(m)), nodes_explored(nodes), elapsed(time_s) {}
+    SolveResult() : solved(false), won(false), nodes_explored(0), elapsed(0.0) {}
+    SolveResult(bool ok, bool w, std::vector<Move>&& m, int nodes, double time_s)
+        : solved(ok), won(w), moves(std::move(m)), nodes_explored(nodes), elapsed(time_s) {}
     SolveResult(bool ok, int nodes, double time_s, const std::string& r)
-        : solved(ok), moves(), nodes_explored(nodes), elapsed(time_s), reason(r) {}
+        : solved(ok), won(false), moves(), nodes_explored(nodes), elapsed(time_s), reason(r) {}
 };
 
 // ============================================================================

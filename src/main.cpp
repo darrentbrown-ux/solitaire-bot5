@@ -302,18 +302,32 @@ struct Bot {
             to_string(result.nodes_explored) + " nodes in " +
             to_string_fixed(result.elapsed, 2) + "s)");
 
-        return execute_solution(result.moves);
+        return execute_solution(result);
     }
 
-    string execute_solution(const vector<Move>& moves) {
+    string execute_solution(const SolveResult& result) {
+        // won=true: initial state was already solved (0 moves)
+        if (result.won) {
+            games_won++;
+            log(":D Game WON! (0 moves executed — pre-auto-clear)");
+            return "won";
+        }
+
+        const vector<Move>& moves = result.moves;
         int move_count = 0;
         const int MAX_RETRIES = 3;
         GameState state = read_state();
         int64_t old_hash = hash_state(state);
 
+        // Empty non-won path (shouldn't happen, but guard against it)
+        if (moves.empty()) {
+            log("! Solution is empty (internal error)");
+            return "failed";
+        }
+
         for (size_t i = 0; i < moves.size() && g_running; ) {
             const Move& move = moves[i];
-            // Skip sentinel (already-won marker)
+            // Skip sentinel (found-won marker)
             if (move.is_no_move()) { ++i; continue; }
 
             state = read_state();

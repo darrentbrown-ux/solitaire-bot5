@@ -48,9 +48,13 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
 
     if (state.is_won()) {
         double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
+        if (verbose_) {
+            cerr << "  [dbg] TOP-LEVEL is_won()=true with pre_moves.size()=" << pre_moves.size() << "
+";
+        }
         move_queue_ = std::move(pre_moves);
         solved_flag_ = true;
-        return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
+        return SolveResult(true, true, std::move(move_queue_), nodes_explored_, elapsed);
     }
 
     // Run DFS
@@ -66,16 +70,11 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
     }
 
     if (!result.empty()) {
-        // Sentinel = won during DFS; pre_moves were applied to the clone.
-        // Add pre_moves to move_queue_ so execute_solution can verify the
-        // actual game state matches (the game's built-in auto-move will handle
-        // them, so they'll either succeed or be no-ops).
+        // Sentinel = dfs found a winning path somewhere; propagate {NONE} with won=false.
+        // execute_solution will detect the {NONE} and return "won".
         if (result.size() == 1 && result[0].is_no_move()) {
-            move_queue_ = std::move(pre_moves);
             solved_flag_ = true;
-            // Return move_queue_ (the actual moves), not result.moves (which is [NONE])
-            vector<Move> to_return = std::move(move_queue_);
-            return SolveResult(true, std::move(to_return), nodes_explored_, elapsed);
+            return SolveResult(true, false, std::move(result), nodes_explored_, elapsed);
         }
         vector<Move> all_moves = pre_moves;
         all_moves.insert(all_moves.end(), result.begin(), result.end());
@@ -86,7 +85,7 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
         }
         move_queue_ = std::move(optimized);
         solved_flag_ = true;
-        return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
+        return SolveResult(true, false, std::move(move_queue_), nodes_explored_, elapsed);
     }
 
     string reason = timed_out() ? "timeout" : "exhausted search space";
@@ -109,6 +108,15 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
 
     if (state.is_won()) {
         if (won_reached) (*won_reached)++;
+        if (verbose_) {
+            cerr << "  [dbg] is_won()=true at depth=" << depth
+                 << "  foundation_count=" << foundation_count(state) << "
+";
+            // Log how many moves are generated for this state
+            vector<Move> dbg_moves = generate_ordered_moves(state, stock_passes);
+            cerr << "  [dbg]   moves available at won-state: " << dbg_moves.size() << "
+";
+        }
         // Return sentinel so the call chain knows we won (empty vec = "no path found")
         return {Move(MoveType::NONE, PileType::STOCK, PileType::STOCK)};
     }
