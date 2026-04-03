@@ -340,6 +340,13 @@ struct Bot {
             vlog("[" + to_string(move_count + 1) + "/" + to_string((int)moves.size()) +
                  "] " + move.to_string());
 
+            // DEBUG: log state before move
+            if (cfg.verbose) {
+                cerr << "  [dbg] STATE BEFORE MOVE " << (move_count + 1) << ":\n" << state.display();
+                string detail = describe_move_attempt(move, state);
+                cerr << "  [dbg] MOVE PREVIEW: " << detail << "\n";
+            }
+
             string error_detail = describe_move_attempt(move, state);
 
             // Flip exposed face-down cards before the move

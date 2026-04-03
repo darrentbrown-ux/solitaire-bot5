@@ -110,6 +110,8 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
         if (verbose_) {
             cerr << "  [dbg] is_won()=true at depth=" << depth
                  << "  foundation_count=" << foundation_count(state) << "\n";
+            // Log full state snapshot
+            cerr << "  [dbg] WIN STATE SNAPSHOT:\n" << state.display();
             // Log how many moves are generated for this state
             vector<Move> dbg_moves = generate_ordered_moves(state, stock_passes);
             cerr << "  [dbg]   moves available at won-state: " << dbg_moves.size() << "\n";
