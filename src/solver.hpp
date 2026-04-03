@@ -57,7 +57,8 @@ private:
     bool timed_out() const;
     int foundation_count(const GameState& state) const;
     std::vector<Move> dfs(GameState state, int depth, int stock_passes,
-                          const std::vector<Move>* recent_tab_moves);
+                          const std::vector<Move>* recent_tab_moves,
+                          int* tt_skipped = nullptr, int* won_reached = nullptr);
 
     std::vector<Move> generate_ordered_moves(const GameState& state, int stock_passes);
     std::vector<std::pair<int, Move>> tableau_to_tableau_moves(const GameState& state);

@@ -37,16 +37,33 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
     GameState state = initial_state.clone();
     vector<Move> pre_moves = apply_forced_moves(state);
 
+    if (verbose_) {
+        cerr << "  [dbg] forced pre-moves: " << pre_moves.size()
+             << "  foundation_count=" << foundation_count(state) << "
+"
+             << "  is_won=" << state.is_won() << "
+"
+             << "  initial state:
+" << state.display();
+    }
+
     if (state.is_won()) {
         double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
-        move_queue_ = pre_moves;
+        move_queue_ = std::move(pre_moves);
         solved_ = true;
-        return SolveResult(true, std::move(pre_moves), nodes_explored_, elapsed);
+        return SolveResult(true, std::move(move_queue_), nodes_explored_, elapsed);
     }
 
     // Run DFS
-    vector<Move> result = dfs(state, 0, 0, nullptr);
+    int tt_skipped = 0, won_reached = 0;
+    vector<Move> result = dfs(state, 0, 0, nullptr, &tt_skipped, &won_reached);
     double elapsed = (clock() - start_time_) / (double)CLOCKS_PER_SEC;
+
+    if (verbose_) {
+        cerr << "  [dbg] DFS done: nodes=" << nodes_explored_
+             << "  tt_skipped=" << tt_skipped
+             << "  won_reached=" << won_reached << "
+";
 
     if (!result.empty()) {
         vector<Move> all_moves = pre_moves;
@@ -69,21 +86,33 @@ SolveResult PerfectSolver::solve(const GameState& initial_state) {
 }
 
 vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
-                                  const vector<Move>* recent_tab_moves) {
+                                  const vector<Move>* recent_tab_moves,
+                                  int* tt_skipped, int* won_reached) {
     nodes_explored_++;
+
+    if (nodes_explored_ % 500000 == 0 && verbose_) {
+        cerr << "  [dbg] nodes=" << nodes_explored_ << " depth=" << depth << "
+";
+    }
 
     if (nodes_explored_ % 2000 == 0 && timed_out())
         return {};
 
     if (depth > 800) return {};
 
-    if (state.is_won()) return {};
+    if (state.is_won()) {
+        if (won_reached) (*won_reached)++;
+        return {};
+    }
 
     // Transposition check
     int64_t h = state.state_hash();
     int fc = foundation_count(state);
     auto it = visited_.find(h);
-    if (it != visited_.end() && it->second >= fc) return {};
+    if (it != visited_.end() && it->second >= fc) {
+        if (tt_skipped) (*tt_skipped)++;
+        return {};
+    }
     visited_[h] = fc;
 
     vector<Move> moves = generate_ordered_moves(state, stock_passes);
@@ -122,7 +151,7 @@ vector<Move> PerfectSolver::dfs(GameState state, int depth, int stock_passes,
             new_recent = recent_tab_moves ? *recent_tab_moves : vector<Move>();
         }
 
-        vector<Move> result = dfs(new_state, depth + 1, new_passes, &new_recent);
+        vector<Move> result = dfs(new_state, depth + 1, new_passes, &new_recent, tt_skipped, won_reached);
         if (!result.empty()) {
             vector<Move> full;
             full.push_back(move);
